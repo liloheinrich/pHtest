@@ -3,6 +3,8 @@ import numpy
 import math
 from enum import Enum
 import numpy as np
+import os.path
+import sys
 
 class GripPipeline:
     """
@@ -13,9 +15,9 @@ class GripPipeline:
         """initializes all values to presets or None if need to be set
         """
 
-        self.hsv_threshold_hue = [0.0, 110.0]
-        self.hsv_threshold_saturation = [90.0, 255.0]
-        self.hsv_threshold_value = [70.0, 170.0]
+        self.hsv_threshold_hue = [0.0, 255.0]
+        self.hsv_threshold_saturation = [50.0, 255.0]
+        self.hsv_threshold_value = [85.0, 255.0]
         self.hsv_threshold_output = None
 
         self.mask_mask = self.hsv_threshold_output
@@ -148,64 +150,73 @@ class GripPipeline:
             output.append(contour)
         return output
 
-filename = 'IMG_8914.jpg'
-print(filename)
-img = cv2.imread(filename)
-cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-cv2.imshow('image',img)
+def main():
+	if len(sys.argv) != 2:
+	    print("wrong amount of arguments. specify one image filename")
+	    return
+
+	filename = sys.argv[1]
+	#filename = 'IMG_8914.jpg'
+	print(filename)
+	lf = len(filename)
+	if (not os.path.isfile(filename)) or (filename[lf-4:lf] != ".jpg"):
+	    print("filename invalid")
+	    return
+
+	img = cv2.imread(filename)
+	cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+	cv2.imshow('image',img)
 
 
-p = GripPipeline()
-p.process(img)
-cv2.namedWindow('image2', cv2.WINDOW_NORMAL)
-cv2.imshow('image2',p.hsv_threshold_output)
+	p = GripPipeline()
+	p.process(img)
+	cv2.namedWindow('image2', cv2.WINDOW_NORMAL)
+	cv2.imshow('image2',p.hsv_threshold_output)
 
 
-print("len(p.filter_contours_output)", len(p.filter_contours_output))
-img3 = img.copy()
-cv2.drawContours(img3, p.filter_contours_output, -1, (0, 255, 0), 15)
-cv2.namedWindow('image3', cv2.WINDOW_NORMAL)
-cv2.imshow('image3',img3)
+	print("len(p.filter_contours_output)", len(p.filter_contours_output))
+	img3 = img.copy()
+	cv2.drawContours(img3, p.filter_contours_output, -1, (0, 255, 0), 15)
+	cv2.namedWindow('image3', cv2.WINDOW_NORMAL)
+	cv2.imshow('image3',img3)
 
 
-(x, y), radius = cv2.minEnclosingCircle(p.filter_contours_output[0])
-center = (int(x), int(y))
-radius = int(radius)
-#print(center, radius)
-img4 = img.copy()
-cv2.circle(img4, center, radius, (255, 0, 0), 15)
-cv2.namedWindow('image4', cv2.WINDOW_NORMAL)
-cv2.imshow('image4',img4)
+	# (x, y), radius = cv2.minEnclosingCircle(p.filter_contours_output[0])
+	# center = (int(x), int(y))
+	# radius = int(radius)
+	# #print(center, radius)
+	# img4 = img.copy()
+	# cv2.circle(img4, center, radius, (255, 0, 0), 15)
+	# cv2.namedWindow('image4', cv2.WINDOW_NORMAL)
+	# cv2.imshow('image4',img4)
 
 
-ellipse = cv2.fitEllipse(p.filter_contours_output[0])
-#print(ellipse)
-img5 = img.copy()
-cv2.ellipse(img5,ellipse,(0,0,255),15)
-cv2.namedWindow('image5', cv2.WINDOW_NORMAL)
-cv2.imshow('image5',img5)
+	ellipse = cv2.fitEllipse(p.filter_contours_output[0])
+	#print(ellipse)
+	img5 = img.copy()
+	cv2.ellipse(img5,ellipse,(0,0,255),15)
+	cv2.namedWindow('image5', cv2.WINDOW_NORMAL)
+	cv2.imshow('image5',img5)
 
 
-cv2.namedWindow('image6', cv2.WINDOW_NORMAL)
-cv2.imshow('image6',p.mask_output)
+	cv2.namedWindow('image6', cv2.WINDOW_NORMAL)
+	cv2.imshow('image6',p.mask_output)
+	output = cv2.findNonZero(p.mask_mask)
+	#print(len(output))
+	img8 = img.copy()
+	hsv = cv2.cvtColor(img8, cv2.COLOR_BGR2HSV)
+	hue_vals = []
+	count = 0;
+	for i in output:
+	    #if count % 3000 == 0:
+	    #    print(i[0], hsv[i[0][1], i[0][0]])
+	    count += 1
+	    hue_vals.append(hsv[i[0][1], i[0][0], 0])
+	print(len(hue_vals))
+	print("np.mean(hue_vals)", np.mean(hue_vals))
 
 
-output = cv2.findNonZero(p.mask_mask)
-#print(len(output))
-img8 = img.copy()
-hsv = cv2.cvtColor(img8, cv2.COLOR_BGR2HSV)
-hue_vals = []
-count = 0;
-for i in output:
-    #if count % 3000 == 0:
-    #    print(i[0], hsv[i[0][1], i[0][0]])
-    count += 1
-    hue_vals.append(hsv[i[0][1], i[0][0], 0])
-print(len(hue_vals))
-print("np.mean(hue_vals)", np.mean(hue_vals))
+	cv2.waitKey(0)
+	cv2.destroyAllWindows()
 
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-
+main()
