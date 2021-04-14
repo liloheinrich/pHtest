@@ -14,7 +14,7 @@ class CenterPipeline:
 
         self.hsv_threshold_hue = [0.0, 255.0]
         self.hsv_threshold_saturation = [95.0, 255.0]
-        self.hsv_threshold_value = [130.0, 255.0]
+        self.hsv_threshold_value = [110.0, 255.0]
         self.hsv_threshold_output = None
 
         self.mask_mask = self.hsv_threshold_output

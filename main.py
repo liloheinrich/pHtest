@@ -6,6 +6,7 @@ import os.path
 import sys
 from background import get_background_color
 from center import get_center_color
+# import string
 
 def get_filename():
     if len(sys.argv) != 2:
@@ -14,7 +15,8 @@ def get_filename():
 
     filename = sys.argv[1]
     lf = len(filename)
-    if (not os.path.isfile(filename)) or (filename[lf-4:lf] != ".jpg"):
+    # print(filename)
+    if (not os.path.isfile(filename)) or (filename[lf-4:lf].lower() != ".jpg"):
         print("filename invalid")
         exit()
 

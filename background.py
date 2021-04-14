@@ -20,8 +20,8 @@ class BackgroundPipeline:
 
         self.hsv_threshold_input = self.normalize_output
         self.hsv_threshold_hue = [0.0, 180.0]
-        self.hsv_threshold_saturation = [0.0, 83.98981324278438]
-        self.hsv_threshold_value = [201.58695077836035, 255.0]
+        self.hsv_threshold_saturation = [0.0, 85.0]
+        self.hsv_threshold_value = [190.0, 255.0]
 
         self.hsv_threshold_output = None
 
