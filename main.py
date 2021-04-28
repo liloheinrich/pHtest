@@ -82,26 +82,26 @@ def show_images(img, levelled, remapped, background_pipeline, center_pipeline):
     cv2.imshow('image',img)
 
     # should show less tinted looking, it is color-levelled
-    cv2.namedWindow('levelled', cv2.WINDOW_NORMAL)
-    cv2.imshow('levelled',levelled)
+    # cv2.namedWindow('levelled', cv2.WINDOW_NORMAL)
+    # cv2.imshow('levelled',levelled)
 
     # should show everything except background as masked
-    cv2.namedWindow('background', cv2.WINDOW_NORMAL)
-    cv2.imshow('background',background_pipeline.mask_output)
+    # cv2.namedWindow('background', cv2.WINDOW_NORMAL)
+    # cv2.imshow('background',background_pipeline.mask_output)
 
     # should show remapped image, cleaned up with actually white background
     cv2.namedWindow('remapped', cv2.WINDOW_NORMAL)
     cv2.imshow('remapped',remapped)
 
     # should show center in white, rest black
-    cv2.namedWindow('hsv_threshold_output', cv2.WINDOW_NORMAL)
-    cv2.imshow('hsv_threshold_output',center_pipeline.hsv_threshold_output)
+    # cv2.namedWindow('hsv_threshold_output', cv2.WINDOW_NORMAL)
+    # cv2.imshow('hsv_threshold_output',center_pipeline.hsv_threshold_output)
 
     # should show only one contour around the center where the result is
-    filter_contours = remapped.copy()
-    cv2.drawContours(filter_contours, center_pipeline.filter_contours_output, -1, (0, 255, 0), 15)
-    cv2.namedWindow('filter_contours', cv2.WINDOW_NORMAL)
-    cv2.imshow('filter_contours',filter_contours)
+    # filter_contours = remapped.copy()
+    # cv2.drawContours(filter_contours, center_pipeline.filter_contours_output, -1, (0, 255, 0), 10)
+    # cv2.namedWindow('filter_contours', cv2.WINDOW_NORMAL)
+    # cv2.imshow('filter_contours',filter_contours)
 
     # should show image with mask over everything but the ph test
     cv2.namedWindow('mask_output', cv2.WINDOW_NORMAL)
@@ -120,6 +120,18 @@ def get_ph(hue):
 def main():
     filename = get_filename()
     img = cv2.imread(filename)
+
+    center_pipeline, bgr_center, hsv_center = get_center_color(img)
+    print("bgr_center", bgr_center)
+    print("hsv_center", hsv_center)
+    filter_contours = img.copy()
+    cv2.drawContours(filter_contours, center_pipeline.filter_contours_output, -1, (0, 255, 0), 10)
+    cv2.namedWindow('filter_contours1', cv2.WINDOW_NORMAL)
+    cv2.imshow('filter_contours1',filter_contours)
+    cv2.namedWindow('mask_output1', cv2.WINDOW_NORMAL)
+    cv2.imshow('mask_output1',center_pipeline.mask_output)
+
+
 
     # run pipeline to pick out background color
     background_pipeline, bgr_background, hsv_background = get_background_color(img)
