@@ -107,15 +107,28 @@ def show_images(img, levelled, remapped, background_pipeline, center_pipeline):
     cv2.namedWindow('mask_output', cv2.WINDOW_NORMAL)
     cv2.imshow('mask_output',center_pipeline.mask_output)
 
-def get_ph(hue):
-    # linear fit using slope of ph=7 / hue=22.5ish
-    # slope = 7.0/22.5
-    # ph = hue*slope
+def get_ph_euclidian(bgr):
+    calibratedB = [73, 37, 28, 12, 42.5, 35.3, 53, 36, 38, 48]
+    calibratedG = [91, 120, 115, 114, 141, 108, 150, 122.5, 121, 93]
+    calibratedR = [223, 214, 196, 194, 215, 159, 211, 169.5, 132, 91]
 
-    # used desmos to very roughly estimate color->ph curve
-    a = 1.55
-    ph = math.log(hue)/math.log(a)
-    return ph
+    #difference between observed bgr and calibrated bgr values 
+    diffB = [x - bgr[0] for x in calibratedB]; 
+    diffG = [x - bgr[1] for x in calibratedG]; 
+    diffR = [x - bgr[2] for x in calibratedR]; 
+    
+    min_diff = math.sqrt(diffB[0]*diffB[0] + diffG[0]*diffG[0] + diffR[0]*diffR[0])
+    predicted_ph = 1
+    
+    for i in range(1, 10):
+        diff = math.sqrt(diffB[i]*diffB[i] + diffG[i]*diffG[i] + diffR[i]*diffR[i])
+        print(i)
+        print(diff)
+        if diff < min_diff:
+            predicted_ph = i+1
+            min_diff = diff
+
+    return predicted_ph
 
 def main():
     filename = get_filename()
@@ -161,7 +174,7 @@ def main():
     # optionally show annotated images. helps for debugging
     show_images(img, levelled, remapped, background_pipeline, center_pipeline)
 
-    ph = get_ph(hsv_center[0])
+    ph = get_ph_euclidian(bgr_center)
     print("\nEstimated pH value:", round(ph,1), "\n")
 
     cv2.waitKey(0)
