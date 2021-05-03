@@ -139,23 +139,16 @@ def main():
     filename = get_filename()
     img = cv2.imread(filename)
 
-    center_pipeline, bgr_center, hsv_center = get_center_color(img)
-    # print("bgr_center", bgr_center)
-    # print("hsv_center", hsv_center)
-
     # run pipeline to pick out background color
     background_pipeline, bgr_background, hsv_background = get_background_color(img)
-    print("bgr_background", bgr_background)
-    print("hsv_background", hsv_background)
+    # print("bgr_background", bgr_background)
+    # print("hsv_background", hsv_background)
 
     # params to remap to. takes averge background color as white and darkest color as black
     black = [0,0,0] # black, the dark color limit, doesn't matter so much
     white = bgr_background
-    # print("white", white)
-    # print("black", black)
 
     # cleans up image, accounts for lighting
-    # remapped = remap(img, white, black)
     levelled = level(img, bgr_background)
     background_pipeline, bgr_background, hsv_background = get_background_color(levelled)
     print("bgr_background", bgr_background)
@@ -166,7 +159,6 @@ def main():
     center_pipeline, bgr_center, hsv_center = get_center_color(remapped)
     print("bgr_center", bgr_center)
     print("hsv_center", hsv_center)
-
     print("HSVBGR:", hsv_center[0], hsv_center[1], hsv_center[2], bgr_center[0], bgr_center[1], bgr_center[2])
 
     # optionally show annotated images. helps for debugging
