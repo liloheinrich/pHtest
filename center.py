@@ -13,8 +13,8 @@ class CenterPipeline:
         """
 
         self.hsv_threshold_hue = [0.0, 255.0]
-        self.hsv_threshold_saturation = [95.0, 255.0]
-        self.hsv_threshold_value = [110.0, 255.0]
+        self.hsv_threshold_saturation = [80.0, 255.0]
+        self.hsv_threshold_value = [70.0, 255.0]
         self.hsv_threshold_output = None
 
         self.mask_mask = self.hsv_threshold_output
@@ -25,17 +25,17 @@ class CenterPipeline:
         self.find_contours_output = None
 
         self.filter_contours_contours = self.find_contours_output
-        self.filter_contours_min_area = 100.0
-        self.filter_contours_min_perimeter = 100.0
-        self.filter_contours_min_width = 0
-        self.filter_contours_max_width = 1000
-        self.filter_contours_min_height = 0
-        self.filter_contours_max_height = 1000
-        self.filter_contours_solidity = [0, 100]
-        self.filter_contours_max_vertices = 1000000
+        self.filter_contours_min_area = 10000.0
+        self.filter_contours_min_perimeter = 500.0
+        self.filter_contours_min_width = 100
+        self.filter_contours_max_width = 10000
+        self.filter_contours_min_height = 100
+        self.filter_contours_max_height = 10000
+        self.filter_contours_solidity = [90, 100]
+        self.filter_contours_max_vertices = 10000000
         self.filter_contours_min_vertices = 0
-        self.filter_contours_min_ratio = 0
-        self.filter_contours_max_ratio = 1000
+        self.filter_contours_min_ratio = 0.5
+        self.filter_contours_max_ratio = 2.0
         self.filter_contours_output = None
 
     def process(self, source0):
@@ -59,6 +59,9 @@ class CenterPipeline:
         self.filter_contours_contours = self.find_contours_output
         (self.filter_contours_output) = self.filter_contours(self.filter_contours_contours, self.filter_contours_min_area, self.filter_contours_min_perimeter, self.filter_contours_min_width, self.filter_contours_max_width, self.filter_contours_min_height, self.filter_contours_max_height, self.filter_contours_solidity, self.filter_contours_max_vertices, self.filter_contours_min_vertices, self.filter_contours_min_ratio, self.filter_contours_max_ratio)
 
+        self.final_mask = np.zeros(source0.shape[0:2], dtype='uint8')
+        cv2.drawContours(self.final_mask, self.filter_contours_output, -1, (255,255,255), -1)
+        self.final_output = cv2.bitwise_and(source0, source0, mask=self.final_mask)
 
     @staticmethod
     def hsv_threshold(input, hue, sat, val):
@@ -144,8 +147,33 @@ class CenterPipeline:
             ratio = (float)(w) / h
             if (ratio < min_ratio or ratio > max_ratio):
                 continue
+            print("contour", round(w, 3), round(h,3), round(area,3), round(cv2.arcLength(contour, True),3), round(solid,3), round(ratio,3))
             output.append(contour)
         return output
+
+
+def bgr_to_hsv(b, g, r):
+  r /= 255
+  g /= 255
+  b /= 255
+  maxc = max(r, g, b)
+  minc = min(r, g, b)
+  v = maxc
+  if minc == maxc:
+      return 0.0, 0.0, v
+  s = (maxc-minc) / maxc
+  rc = (maxc-r) / (maxc-minc)
+  gc = (maxc-g) / (maxc-minc)
+  bc = (maxc-b) / (maxc-minc)
+  if r == maxc:
+      h = bc-gc
+  elif g == maxc:
+      h = 2.0+rc-bc
+  else:
+      h = 4.0+gc-rc
+  h = (h/6.0) % 1.0
+  return h * 360, s * 100, v * 100
+
 
 def get_center_color(source):
     # run pipeline to detect center where test result is shown
@@ -153,15 +181,18 @@ def get_center_color(source):
     p = CenterPipeline()
     p.process(img)
 
-    # get the average bgr for the center
-    float_bgr = list(cv2.mean(p.mask_output[:,:,:], p.mask_mask)[0:3])
-    bgr_center = [round(x) for x in float_bgr]
+    # get the average bgr of the center contour
+    # float_bgr = list(cv2.mean(p.mask_output[:,:,:], p.mask_mask)[0:3])
+    float_bgr = list(cv2.mean(p.final_output[:,:,:], p.final_mask)[0:3])
+    # bgr_center = [round(x) for x in float_bgr]
 
     # get the average hsv for the center as well
-    hsv_mat = cv2.cvtColor(np.uint8([[bgr_center]]), cv2.COLOR_BGR2HSV)
-    hsv_center = hsv_mat[0][0]
+    # hsv_mat = cv2.cvtColor(np.float([[float_bgr]]), cv2.COLOR_BGR2HSV)
+    # hsv_center = hsv_mat[0][0]
+    float_hsv = bgr_to_hsv(float_bgr[0], float_bgr[1], float_bgr[2])
 
-    return p, np.array(bgr_center).astype(int), np.array(hsv_center).astype(int)
+    # return p, np.array(bgr_center).astype(int), np.array(hsv_center).astype(int)
+    return p, float_bgr, float_hsv
 
 
 # # Ellipse fit -- no longer using

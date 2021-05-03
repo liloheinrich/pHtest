@@ -86,26 +86,32 @@ def show_images(img, levelled, remapped, background_pipeline, center_pipeline):
     # cv2.imshow('levelled',levelled)
 
     # should show everything except background as masked
-    # cv2.namedWindow('background', cv2.WINDOW_NORMAL)
-    # cv2.imshow('background',background_pipeline.mask_output)
+    cv2.namedWindow('background', cv2.WINDOW_NORMAL)
+    cv2.imshow('background',background_pipeline.mask_output)
 
     # should show remapped image, cleaned up with actually white background
     cv2.namedWindow('remapped', cv2.WINDOW_NORMAL)
     cv2.imshow('remapped',remapped)
 
     # should show center in white, rest black
-    # cv2.namedWindow('hsv_threshold_output', cv2.WINDOW_NORMAL)
-    # cv2.imshow('hsv_threshold_output',center_pipeline.hsv_threshold_output)
+    cv2.namedWindow('hsv_threshold_output', cv2.WINDOW_NORMAL)
+    cv2.imshow('hsv_threshold_output',center_pipeline.hsv_threshold_output)
 
-    # should show only one contour around the center where the result is
-    # filter_contours = remapped.copy()
-    # cv2.drawContours(filter_contours, center_pipeline.filter_contours_output, -1, (0, 255, 0), 10)
-    # cv2.namedWindow('filter_contours', cv2.WINDOW_NORMAL)
-    # cv2.imshow('filter_contours',filter_contours)
-
-    # should show image with mask over everything but the ph test
     cv2.namedWindow('mask_output', cv2.WINDOW_NORMAL)
     cv2.imshow('mask_output',center_pipeline.mask_output)
+
+    # img2 = img.copy()
+    # cv2.drawContours(img2, center_pipeline.find_contours_output, -1, (0,255,0), -1)
+    #     # self.final_output = cv2.bitwise_and(source0, source0, mask=self.final_mask)
+    # cv2.namedWindow('draw contours', cv2.WINDOW_NORMAL)
+    # cv2.imshow('draw contours',img2)
+
+    cv2.namedWindow('final_mask', cv2.WINDOW_NORMAL)
+    cv2.imshow('final_mask',center_pipeline.final_mask)
+
+    # should show image with mask over everything but the ph test
+    cv2.namedWindow('final_output', cv2.WINDOW_NORMAL)
+    cv2.imshow('final_output',center_pipeline.final_output)
 
 def get_ph(hue):
     # linear fit using slope of ph=7 / hue=22.5ish
@@ -122,16 +128,8 @@ def main():
     img = cv2.imread(filename)
 
     center_pipeline, bgr_center, hsv_center = get_center_color(img)
-    print("bgr_center", bgr_center)
-    print("hsv_center", hsv_center)
-    filter_contours = img.copy()
-    cv2.drawContours(filter_contours, center_pipeline.filter_contours_output, -1, (0, 255, 0), 10)
-    cv2.namedWindow('filter_contours1', cv2.WINDOW_NORMAL)
-    cv2.imshow('filter_contours1',filter_contours)
-    cv2.namedWindow('mask_output1', cv2.WINDOW_NORMAL)
-    cv2.imshow('mask_output1',center_pipeline.mask_output)
-
-
+    # print("bgr_center", bgr_center)
+    # print("hsv_center", hsv_center)
 
     # run pipeline to pick out background color
     background_pipeline, bgr_background, hsv_background = get_background_color(img)
@@ -139,11 +137,10 @@ def main():
     print("hsv_background", hsv_background)
 
     # params to remap to. takes averge background color as white and darkest color as black
-    # black = [img[:,:,0].min(), img[:,:,1].min(), img[:,:,2].min()]
     black = [0,0,0] # black, the dark color limit, doesn't matter so much
     white = bgr_background
-    print("white", white)
-    print("black", black)
+    # print("white", white)
+    # print("black", black)
 
     # cleans up image, accounts for lighting
     # remapped = remap(img, white, black)
@@ -158,11 +155,13 @@ def main():
     print("bgr_center", bgr_center)
     print("hsv_center", hsv_center)
 
+    print(hsv_center[0], hsv_center[1], hsv_center[2], bgr_center[0], bgr_center[1], bgr_center[2])
+
     # optionally show annotated images. helps for debugging
     show_images(img, levelled, remapped, background_pipeline, center_pipeline)
 
-    ph = get_ph(hsv_center[0])
-    print("\nEstimated pH value:", round(ph,1), "\n")
+    # ph = get_ph(hsv_center[0])
+    # print("\nEstimated pH value:", round(ph,1), "\n")
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
